@@ -1,0 +1,13 @@
+{
+  "name": "example-cloudflare",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@cl3/core": "workspace:*",
+    "@cl3/source-remote": "workspace:*"
+  }
+}

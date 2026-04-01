@@ -7,13 +7,15 @@ const globalCache = createMemoryCache()
 
 export async function getCollection<TSchema extends z.ZodObject<z.ZodRawShape>>(
   collection: Collection<TSchema>,
-  options?: { fresh?: boolean }
-): Promise<z.infer<TSchema>[]> {
+  options?: { fresh?: boolean; select?: (keyof z.infer<TSchema>)[] }
+): Promise<Partial<z.infer<TSchema>>[]> {
   const cacheKey = `cl3:${collection.name}`
 
   if (!options?.fresh) {
     const cached = globalCache.get<z.infer<TSchema>[]>(cacheKey)
-    if (cached !== undefined) return cached
+    if (cached !== undefined) {
+      return applySelectProjection(cached, options?.select)
+    }
   }
 
   let rawItems: unknown[]
@@ -47,7 +49,33 @@ export async function getCollection<TSchema extends z.ZodObject<z.ZodRawShape>>(
     await collection.config.onIndexReady(results)
   }
 
-  return results
+  return applySelectProjection(results, options?.select)
+}
+
+function applySelectProjection<T extends Record<string, unknown>>(
+  items: T[],
+  select?: (keyof T)[]
+): Partial<T>[] {
+  if (!select) {
+    return items
+  }
+
+  return items.map(item => {
+    const projected: Partial<T> = {}
+    // Always include _filePath if present
+    if ('_filePath' in item) {
+      ;(projected as any)._filePath = item._filePath
+    }
+
+    // Include selected fields
+    for (const field of select) {
+      if (field in item) {
+        ;(projected as any)[field] = item[field]
+      }
+    }
+
+    return projected
+  })
 }
 
 export async function getCollectionItem<TSchema extends z.ZodObject<z.ZodRawShape>>(

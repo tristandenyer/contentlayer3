@@ -57,6 +57,15 @@ importers:
         specifier: ^3.22.0
         version: 3.25.76
 
+  apps/example-cloudflare:
+    dependencies:
+      '@cl3/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@cl3/source-remote':
+        specifier: workspace:*
+        version: link:../../packages/source-remote
+
   apps/example-nextjs:
     dependencies:
       '@cl3/core':

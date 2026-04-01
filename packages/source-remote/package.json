@@ -6,6 +6,8 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "edge-light": "./dist/index.js",
+      "worker": "./dist/index.js",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }

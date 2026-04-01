@@ -104,7 +104,7 @@ describe('getCollection', () => {
     const items = await getCollection(col)
     for (const item of items) {
       expect(item._filePath).toBeTypeOf('string')
-      expect(item._filePath.length).toBeGreaterThan(0)
+      expect((item._filePath!).length).toBeGreaterThan(0)
     }
   })
 

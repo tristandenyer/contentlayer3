@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '**/dist'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '**/dist', '**/*.bench.ts'],
   },
   resolve: {
     alias: {},
