@@ -1,6 +1,6 @@
 {
   "name": "@cl3/devtools",
-  "version": "0.1.0",
+  "version": "1.0.0-rc",
   "type": "module",
   "description": "CL3 developer tools",
   "bin": {

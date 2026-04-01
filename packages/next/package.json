@@ -1,6 +1,6 @@
 {
   "name": "@cl3/next",
-  "version": "0.0.1",
+  "version": "1.0.0-rc",
   "type": "module",
   "description": "CL3 Next.js integration",
   "main": "./dist/index.js",

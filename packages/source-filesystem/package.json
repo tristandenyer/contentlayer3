@@ -1,6 +1,6 @@
 {
   "name": "@cl3/source-filesystem",
-  "version": "0.0.1",
+  "version": "1.0.0-rc",
   "type": "module",
   "description": "CL3 filesystem source adapter",
   "exports": {

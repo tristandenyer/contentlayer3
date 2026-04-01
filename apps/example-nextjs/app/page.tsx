@@ -1,26 +1,20 @@
-import { z } from 'zod'
-import { defineCollection } from '@cl3/core'
 import { getCollection } from '@cl3/next'
-import { filesystem } from '@cl3/source-filesystem'
-
-const posts = defineCollection({
-  name: 'posts',
-  source: filesystem({ contentDir: 'content', pattern: '**/*.md' }),
-  schema: z.object({
-    title: z.string(),
-    _content: z.string(),
-    _filePath: z.string(),
-  }),
-})
+import { posts } from '../cl3.config.js'
 
 export default async function Home() {
-  const items = await getCollection(posts)
+  const allPosts = await getCollection(posts)
   return (
-    <main>
-      <h1>CL3 Example</h1>
+    <main style={{ padding: '2rem' }}>
+      <h1>Blog</h1>
       <ul>
-        {items.map((item) => (
-          <li key={item._filePath}>{item.title}</li>
+        {allPosts.map((post) => (
+          <li key={post._filePath} style={{ marginBottom: '1rem' }}>
+            <a href={`/posts/${post._filePath?.split('/').pop()?.replace('.mdx', '')}`}>
+              <strong>{post.title}</strong>
+            </a>
+            <p>{post.excerpt}</p>
+            <small>{post.date}</small>
+          </li>
         ))}
       </ul>
     </main>

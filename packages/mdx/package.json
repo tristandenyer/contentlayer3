@@ -1,6 +1,6 @@
 {
   "name": "@cl3/mdx",
-  "version": "0.0.1",
+  "version": "1.0.0-rc",
   "type": "module",
   "description": "CL3 MDX support",
   "main": "./dist/index.js",

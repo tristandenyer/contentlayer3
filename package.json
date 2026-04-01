@@ -2,7 +2,7 @@
   "name": "cl3-monorepo",
   "private": true,
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0-rc",
   "description": "CL3: Runtime content layer for Next.js",
   "scripts": {
     "build": "pnpm -r build",
