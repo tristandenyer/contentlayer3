@@ -134,7 +134,7 @@ export async function POST(request: Request) {
 | Edge-safe core            | 🟢  | 🔴             | 🔴                  | 🔴             |
 | Search hooks              | 🟢  | 🔴             | 🔴                  | 🔴             |
 | Postman governance        | 🟢  | 🔴             | 🔴                  | 🔴             |
-| GraphQL API               | 🔴  | 🔴             | 🔴                  | 🟢             |
+| GraphQL API               | 🟢  | 🔴             | 🔴                  | 🟢             |
 | Build-time/static output  | 🔴  | 🟢             | 🟢                  | 🟢             |
 | Actively maintained       | 🟢  | 🟢             | 🟢                  | 🟢             |
 
@@ -160,18 +160,18 @@ See [Postman Governance](./packages/postman/README.md) for the full command refe
 `@contentlayer3/graphql` exposes your collections as a type-safe GraphQL endpoint. Zod schemas are automatically converted to GraphQL types.
 
 ```bash
-pnpm add @contentlayer3/graphql
+npm add @contentlayer3/graphql
 ```
 
 ```typescript
 // app/api/graphql/route.ts
-import { withCollections } from '@contentlayer3/graphql'
-import { getCollection } from 'contentlayer3'
-import { posts } from '../../../contentlayer3.config'
+import { withCollections } from "@contentlayer3/graphql";
+import { getCollection } from "contentlayer3";
+import { posts } from "../../../contentlayer3.config";
 
 export const { GET, POST } = withCollections([
-  { name: 'posts', schema: posts.schema, getItems: () => getCollection(posts) },
-])
+  { name: "posts", schema: posts.schema, getItems: () => getCollection(posts) },
+]);
 ```
 
 Generate a `schema.graphql` SDL file:
