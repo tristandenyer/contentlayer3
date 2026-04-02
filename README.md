@@ -113,6 +113,7 @@ export async function POST(request: Request) {
 | `@contentlayer3/devtools`        | CLI tools: `validate`, `inspect`, `watch`                                                           | ✗                 |
 | `@contentlayer3/postman`         | Postman governance CLI: sync remote source schemas with Postman collections                         | ✗                 |
 | `@contentlayer3/graphql`         | GraphQL API plugin: expose collections via a type-safe GraphQL endpoint                             | ✓                 |
+| `@contentlayer3/mcp`             | MCP server for AI-assisted governance: query collections, diff Postman specs, validate schemas      | ✗                 |
 
 ### Subpath exports
 
@@ -182,6 +183,70 @@ contentlayer3-graphql generate
 
 See [GraphQL Plugin](./packages/graphql/README.md) for full documentation.
 
+## JSON Output
+
+All governance CLIs support a `--json` flag for scripting and CI integration:
+
+```bash
+contentlayer3-postman status --json    # workspace + per-source sync state
+contentlayer3-postman discover --json  # all sources with governance status
+contentlayer3-postman pull <name> --json   # diff vs Postman spec
+contentlayer3-postman sync --json      # drift check with structured output
+contentlayer3 validate --json          # validation results per collection
+contentlayer3 inspect --json           # schema fields per collection
+contentlayer3-graphql validate --json  # GraphQL schema validation errors
+```
+
+Exit codes are preserved in `--json` mode so CI pipelines can use both structured output and error detection.
+
+## MCP Server
+
+`@contentlayer3/mcp` exposes contentlayer3 governance as an [MCP](https://modelcontextprotocol.io) server, enabling AI assistants (Claude, Cursor, etc.) to query and triage your content layer using natural language.
+
+```bash
+npm add -D @contentlayer3/mcp
+```
+
+Configure in your MCP client (e.g. `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "contentlayer3": {
+      "command": "contentlayer3-mcp"
+    }
+  }
+}
+```
+
+### Available tools
+
+| Tool | What it does |
+| --- | --- |
+| `get-collection` | Load a collection by name from `contentlayer3.mcp.json` |
+| `validate-collection` | Validate all items against the collection schema |
+| `get-schema` | Return field names and types for a collection |
+| `postman-status` | Read sync state from `contentlayer3.lock` |
+| `postman-diff` | Fetch the latest diff for a governed collection |
+| `graphql-validate` | Validate the GraphQL schema from `contentlayer3.graphql.json` |
+
+Create a `contentlayer3.mcp.json` sidecar in your project root to configure collections:
+
+```json
+{
+  "collections": [
+    {
+      "name": "posts",
+      "fields": {
+        "title": "string",
+        "date": "string",
+        "excerpt": { "type": "string", "optional": true }
+      }
+    }
+  ]
+}
+```
+
 ## Documentation
 
 - [Core / Next.js](./packages/contentlayer3/README.md)
@@ -191,6 +256,7 @@ See [GraphQL Plugin](./packages/graphql/README.md) for full documentation.
 - [Developer Tools](./packages/devtools/README.md)
 - [Postman Governance](./packages/postman/README.md)
 - [GraphQL Plugin](./packages/graphql/README.md)
+- [MCP Server](./packages/mcp/README.md)
 
 ## Migration from Contentlayer
 

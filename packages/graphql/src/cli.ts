@@ -28,8 +28,9 @@ program
 program
   .command('validate')
   .description('Validate the GraphQL schema for structural errors')
-  .action(async () => {
-    await runValidate()
+  .option('--json', 'Output as JSON')
+  .action(async (opts: { json?: boolean }) => {
+    await runValidate(opts)
   })
 
 program.parse()

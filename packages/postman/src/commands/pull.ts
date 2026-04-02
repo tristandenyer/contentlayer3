@@ -9,7 +9,7 @@ import { diffOpenAPISpecs, formatDiff } from '../lib/diff.js'
 
 const TMP_DIR = (cwd = process.cwd()) => resolve(cwd, '.contentlayer3', 'tmp')
 
-export async function runPull(name: string): Promise<void> {
+export async function runPull(name: string, opts: { json?: boolean } = {}): Promise<void> {
   const lock = await readLock()
   if (!lock) {
     console.error(pc.red('No contentlayer3.lock found. Run: contentlayer3 postman init'))
@@ -31,16 +31,31 @@ export async function runPull(name: string): Promise<void> {
 
   const client = createPostmanClient({ apiKey })
 
-  process.stdout.write(`Fetching current Postman spec for "${entry.postmanCollectionName}"...  `)
+  if (!opts.json) {
+    process.stdout.write(`Fetching current Postman spec for "${entry.postmanCollectionName}"...  `)
+  }
   const currentSpecStr = await getCollectionAsOpenAPI(client, entry.postmanCollectionId)
   const currentHash = hashSpec(JSON.parse(currentSpecStr))
-  console.log(pc.green('✓'))
+  if (!opts.json) {
+    console.log(pc.green('✓'))
+  }
 
   const lastSynced = new Date(entry.lastSyncedAt).toLocaleDateString()
-  console.log(`Comparing to last synced spec (${lastSynced})...\n`)
+  if (!opts.json) {
+    console.log(`Comparing to last synced spec (${lastSynced})...\n`)
+  }
 
   if (currentHash === entry.specHash) {
-    console.log(pc.green(`Already in sync. Nothing to pull.`))
+    if (opts.json) {
+      console.log(JSON.stringify({
+        name,
+        inSync: true,
+        changes: null,
+        pulledAt: null,
+      }))
+    } else {
+      console.log(pc.green(`Already in sync. Nothing to pull.`))
+    }
     return
   }
 
@@ -53,34 +68,51 @@ export async function runPull(name: string): Promise<void> {
   // Field-level diff using previous spec if available
   const prevSpecPath = resolve(tmpDir, `${name}.spec.prev.json`)
   const total: number[] = []
+  let diff: any = null
+  let changes: { added: string[]; removed: string[]; changed: string[] } | null = null
 
   if (existsSync(prevSpecPath)) {
     const prevStr = await readFile(prevSpecPath, 'utf-8')
-    const diff = diffOpenAPISpecs(prevStr, currentSpecStr)
+    diff = diffOpenAPISpecs(prevStr, currentSpecStr)
     const changeCount = diff.added.length + diff.removed.length + diff.changed.length
     total.push(changeCount)
+    changes = { added: diff.added, removed: diff.removed, changed: diff.changed }
 
-    console.log(`CHANGES IN POSTMAN (since your last sync):`)
-    const diffOut = formatDiff(diff)
-    if (diffOut) console.log(diffOut)
-    console.log(`\n${changeCount} change(s) detected.`)
+    if (!opts.json) {
+      console.log(`CHANGES IN POSTMAN (since your last sync):`)
+      const diffOut = formatDiff(diff)
+      if (diffOut) console.log(diffOut)
+      console.log(`\n${changeCount} change(s) detected.`)
+    }
   } else {
-    console.log(pc.yellow('Spec hash changed.'))
-    console.log(pc.dim('(Field-level diff requires a prior apply run to establish baseline.)'))
+    if (!opts.json) {
+      console.log(pc.yellow('Spec hash changed.'))
+      console.log(pc.dim('(Field-level diff requires a prior apply run to establish baseline.)'))
+    }
   }
 
   // Write diff metadata for apply to consume
+  const pulledAt = new Date().toISOString()
   const diffMeta = {
     name,
     collectionId: entry.postmanCollectionId,
     collectionName: entry.postmanCollectionName,
     previousSpecHash: entry.specHash,
     currentSpecHash: currentHash,
-    pulledAt: new Date().toISOString(),
+    pulledAt,
   }
   const diffPath = resolve(tmpDir, `${name}.diff.json`)
   await writeFile(diffPath, JSON.stringify(diffMeta, null, 2) + '\n', 'utf-8')
 
-  console.log(pc.dim(`\nFull diff written to: .contentlayer3/tmp/${name}.diff.json`))
-  console.log(`\nNext step:\n  contentlayer3 postman apply ${name}`)
+  if (opts.json) {
+    console.log(JSON.stringify({
+      name,
+      inSync: false,
+      changes,
+      pulledAt,
+    }))
+  } else {
+    console.log(pc.dim(`\nFull diff written to: .contentlayer3/tmp/${name}.diff.json`))
+    console.log(`\nNext step:\n  contentlayer3 postman apply ${name}`)
+  }
 }

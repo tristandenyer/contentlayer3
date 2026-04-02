@@ -1,0 +1,32 @@
+{
+  "name": "@contentlayer3/mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for contentlayer3 — exposes collections and governance tools to AI agents",
+  "bin": {
+    "contentlayer3-mcp": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "contentlayer3": "workspace:*",
+    "zod": "^3.0.0",
+    "picocolors": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "contentlayer3": "workspace:*"
+  }
+}

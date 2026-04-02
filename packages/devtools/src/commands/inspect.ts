@@ -6,7 +6,8 @@ import type { z } from 'zod'
 
 export async function runInspect(
   collections: Record<string, Collection<any>>,
-  filterName?: string
+  filterName?: string,
+  opts?: { json?: boolean }
 ): Promise<void> {
   const targets = filterName
     ? Object.entries(collections).filter(([, c]) => c.name === filterName)
@@ -18,6 +19,13 @@ export async function runInspect(
     process.exit(1)
   }
 
+  const results: Array<{
+    name: string
+    fields: string[]
+    itemCount: number
+    error?: string
+  }> = []
+
   for (const [, collection] of targets) {
     let items: unknown[] = []
     let error: string | null = null
@@ -27,19 +35,32 @@ export async function runInspect(
       error = err instanceof Error ? err.message : String(err)
     }
 
-    const table = new Table({ head: [], style: { head: [] } })
-
     // Get schema field names from zod object shape
     const schema = collection.schema as z.ZodObject<z.ZodRawShape>
     const fieldNames = schema.shape ? Object.keys(schema.shape) : []
 
-    table.push(
-      [pc.bold('Collection'), pc.cyan(collection.name)],
-      ['Schema fields', fieldNames.join(', ') || '(none)'],
-      ['Items', error ? pc.red(error) : String(items.length)]
-    )
+    results.push({
+      name: collection.name,
+      fields: fieldNames,
+      itemCount: items.length,
+      ...(error && { error }),
+    })
 
-    console.log(table.toString())
-    console.log()
+    if (!opts?.json) {
+      const table = new Table({ head: [], style: { head: [] } })
+
+      table.push(
+        [pc.bold('Collection'), pc.cyan(collection.name)],
+        ['Schema fields', fieldNames.join(', ') || '(none)'],
+        ['Items', error ? pc.red(error) : String(items.length)]
+      )
+
+      console.log(table.toString())
+      console.log()
+    }
+  }
+
+  if (opts?.json) {
+    console.log(JSON.stringify({ collections: results }))
   }
 }

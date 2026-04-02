@@ -2,7 +2,7 @@ import pc from 'picocolors'
 import { readLock } from '../lib/lock.js'
 import { loadRemoteSources } from '../lib/config-loader.js'
 
-export async function runDiscover(): Promise<void> {
+export async function runDiscover(opts: { json?: boolean } = {}): Promise<void> {
   const [sources, lock] = await Promise.all([loadRemoteSources(), readLock()])
 
   if (sources.length === 0 && !lock) {
@@ -20,6 +20,35 @@ export async function runDiscover(): Promise<void> {
   ])
 
   const endpointMap = new Map(sources.map((s) => [s.name, s.endpoint]))
+
+  if (opts.json) {
+    const sources = Array.from(allNames).map((name) => {
+      const endpoint = endpointMap.get(name) ?? ''
+      let status: 'GOVERNED' | 'UNREGISTERED' | 'IGNORED'
+      let collectionName: string | null = null
+
+      if (lock?.ignored.includes(name)) {
+        status = 'IGNORED'
+      } else if (lock?.governed[name]) {
+        const entry = lock.governed[name]!
+        status = 'GOVERNED'
+        collectionName = entry.postmanCollectionName
+      } else if (lock?.unregistered.includes(name)) {
+        status = 'UNREGISTERED'
+      } else {
+        status = 'UNREGISTERED'
+      }
+
+      return {
+        name,
+        endpoint,
+        status,
+        collectionName,
+      }
+    })
+    console.log(JSON.stringify({ sources }))
+    return
+  }
 
   // Column widths
   const nameWidth = Math.max(6, ...Array.from(allNames).map((n) => n.length)) + 2

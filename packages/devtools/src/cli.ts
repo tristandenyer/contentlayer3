@@ -16,18 +16,20 @@ program
   .command('inspect [collection]')
   .description('Print collection summary (schema, item count, cache status)')
   .option('-c, --config <path>', 'Path to cl3.config.ts/js')
-  .action(async (collection: string | undefined, opts: { config?: string }) => {
+  .option('--json', 'Output results as JSON')
+  .action(async (collection: string | undefined, opts: { config?: string; json?: boolean }) => {
     const { collections } = await loadCL3Config(opts.config)
-    await runInspect(collections, collection)
+    await runInspect(collections, collection, { json: opts.json })
   })
 
 program
   .command('validate')
   .description('Run all collections and report validation errors')
   .option('-c, --config <path>', 'Path to cl3.config.ts/js')
-  .action(async (opts: { config?: string }) => {
+  .option('--json', 'Output results as JSON')
+  .action(async (opts: { config?: string; json?: boolean }) => {
     const { collections } = await loadCL3Config(opts.config)
-    const hasErrors = await runValidate(collections)
+    const hasErrors = await runValidate(collections, { json: opts.json })
     if (hasErrors) process.exit(1)
   })
 

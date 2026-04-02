@@ -18,15 +18,17 @@ export function createCommand(): Command {
     .command('status')
     .description('Overview of all sources and their governance state')
     .option('--offline', 'Skip Postman API polling, read lock file only')
-    .action(async (opts: { offline?: boolean }) => {
-      await runStatus({ offline: opts.offline })
+    .option('--json', 'Output as JSON')
+    .action(async (opts: { offline?: boolean; json?: boolean }) => {
+      await runStatus({ offline: opts.offline, json: opts.json })
     })
 
   cmd
     .command('discover')
     .description('Scan config, list unregistered sources')
-    .action(async () => {
-      await runDiscover()
+    .option('--json', 'Output as JSON')
+    .action(async (opts: { json?: boolean }) => {
+      await runDiscover(opts)
     })
 
   cmd
@@ -54,8 +56,9 @@ export function createCommand(): Command {
   cmd
     .command('pull <name>')
     .description('Fetch Postman spec and show diff vs current — read-only')
-    .action(async (name: string) => {
-      await runPull(name)
+    .option('--json', 'Output as JSON')
+    .action(async (name: string, opts: { json?: boolean }) => {
+      await runPull(name, opts)
     })
 
   cmd
@@ -69,8 +72,9 @@ export function createCommand(): Command {
     .command('sync')
     .description('Drift check — CI-friendly, exits with meaningful codes')
     .option('--ci', 'CI mode: non-interactive, structured output')
-    .action(async (opts: { ci?: boolean }) => {
-      await runSync({ ci: opts.ci })
+    .option('--json', 'Output as JSON')
+    .action(async (opts: { ci?: boolean; json?: boolean }) => {
+      await runSync({ ci: opts.ci, json: opts.json })
     })
 
   cmd

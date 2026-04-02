@@ -13,7 +13,7 @@ type SourceStatus =
   | { kind: 'UNREGISTERED'; name: string; endpoint: string }
   | { kind: 'IGNORED'; name: string }
 
-export async function runStatus(opts: { offline?: boolean } = {}): Promise<void> {
+export async function runStatus(opts: { offline?: boolean; json?: boolean } = {}): Promise<void> {
   const lock = await readLock()
   if (!lock) {
     console.log(pc.yellow('No contentlayer3.lock found.'))
@@ -127,6 +127,37 @@ export async function runStatus(opts: { offline?: boolean } = {}): Promise<void>
         })
       }
     }
+  }
+
+  if (opts.json) {
+    // JSON output mode
+    const jsonOutput = {
+      workspace: {
+        name: lock.postman.workspaceName,
+        id: lock.postman.workspaceId,
+      },
+      sources: statuses.map((s) => {
+        const base: any = {
+          name: s.name,
+          kind: s.kind,
+          collectionName: null,
+          lastSyncedAt: null,
+          diffOutput: null,
+        }
+        if (s.kind === 'GOVERNED_IN_SYNC' || s.kind === 'DRIFTED' || s.kind === 'FILE_EDITED') {
+          base.collectionName = s.collectionName
+        }
+        if (s.kind === 'GOVERNED_IN_SYNC' || s.kind === 'DRIFTED') {
+          base.lastSyncedAt = s.lastSyncedAt
+        }
+        if (s.kind === 'DRIFTED') {
+          base.diffOutput = s.diffOutput || null
+        }
+        return base
+      }),
+    }
+    console.log(JSON.stringify(jsonOutput))
+    return
   }
 
   // Print summary

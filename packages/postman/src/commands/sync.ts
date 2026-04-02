@@ -7,6 +7,7 @@ import { loadRemoteSources } from '../lib/config-loader.js'
 
 interface SyncOptions {
   ci?: boolean
+  json?: boolean
 }
 
 /**
@@ -42,12 +43,14 @@ export async function runSync(opts: SyncOptions = {}): Promise<void> {
     .map((s) => s.name)
     .filter((n) => !governedNames.has(n) && !ignoredNames.has(n))
 
-  if (opts.ci) {
+  if (opts.ci && !opts.json) {
     console.log(`Checking governance for ${governed.length} source(s)...`)
   }
 
   let specDriftCount = 0
   let fileTamperedCount = 0
+  const specDrift: string[] = []
+  const tampered: string[] = []
 
   for (const [name, entry] of governed) {
     let specDrifted = false
@@ -58,80 +61,111 @@ export async function runSync(opts: SyncOptions = {}): Promise<void> {
       if (currentHash !== entry.specHash) {
         specDrifted = true
         specDriftCount++
-        const lastSynced = new Date(entry.lastSyncedAt).toLocaleDateString()
-        console.log(
-          `  ${pc.red('✗')} ${name}    ${pc.red('DRIFTED')} — Postman spec changed since ${lastSynced}`
-        )
-        console.log(`      Run: contentlayer3 postman pull ${name}`)
+        specDrift.push(name)
+        if (!opts.json) {
+          const lastSynced = new Date(entry.lastSyncedAt).toLocaleDateString()
+          console.log(
+            `  ${pc.red('✗')} ${name}    ${pc.red('DRIFTED')} — Postman spec changed since ${lastSynced}`
+          )
+          console.log(`      Run: contentlayer3 postman pull ${name}`)
+        }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.log(`  ${pc.yellow('?')} ${name}    could not fetch Postman spec: ${msg}`)
+      if (!opts.json) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.log(`  ${pc.yellow('?')} ${name}    could not fetch Postman spec: ${msg}`)
+      }
     }
 
     if (!specDrifted) {
       const exists = await generatedSchemaExists(name)
       if (!exists) {
-        console.log(
-          `  ${pc.red('✗')} ${name}    ${pc.red('MISSING')} — generated schema file missing`
-        )
         fileTamperedCount++
+        tampered.push(name)
+        if (!opts.json) {
+          console.log(
+            `  ${pc.red('✗')} ${name}    ${pc.red('MISSING')} — generated schema file missing`
+          )
+        }
       } else {
         const currentFileHash = await hashGeneratedSchema(name)
         if (currentFileHash !== entry.generatedSchemaHash) {
           fileTamperedCount++
-          console.log(
-            `  ${pc.red('✗')} ${name}    ${pc.red('TAMPERED')} — generated schema was manually edited`
-          )
-          console.log(`      Revert edits or run: contentlayer3 postman apply ${name}`)
-        } else {
+          tampered.push(name)
+          if (!opts.json) {
+            console.log(
+              `  ${pc.red('✗')} ${name}    ${pc.red('TAMPERED')} — generated schema was manually edited`
+            )
+            console.log(`      Revert edits or run: contentlayer3 postman apply ${name}`)
+          }
+        } else if (!opts.json) {
           console.log(`  ${pc.green('✓')} ${name}    in sync`)
         }
       }
     }
   }
 
-  if (lock.ignored.length > 0 && !opts.ci) {
+  if (lock.ignored.length > 0 && !opts.ci && !opts.json) {
     for (const name of lock.ignored) {
       console.log(`  ${pc.dim('○')} ${name}    ${pc.dim('IGNORED')}`)
     }
   }
 
-  if (unregistered.length > 0) {
+  if (unregistered.length > 0 && !opts.json) {
     for (const name of unregistered) {
       console.log(`  ${pc.yellow('!')} ${name}    ${pc.yellow('UNREGISTERED')}`)
     }
   }
 
-  console.log()
+  if (!opts.json) {
+    console.log()
+  }
+
+  if (opts.json) {
+    const jsonOutput = {
+      ok: specDriftCount === 0 && fileTamperedCount === 0 && !(unregistered.length > 0 && process.env['CL3_POSTMAN_STRICT_UNREGISTERED'] === '1'),
+      specDrift,
+      tampered,
+      unregistered,
+    }
+    console.log(JSON.stringify(jsonOutput))
+  }
 
   if (specDriftCount > 0) {
-    console.log(
-      pc.red(`Governance check failed: ${specDriftCount} source(s) out of sync with Postman.`)
-    )
+    if (!opts.json) {
+      console.log(
+        pc.red(`Governance check failed: ${specDriftCount} source(s) out of sync with Postman.`)
+      )
+    }
     process.exit(1)
   }
 
   if (fileTamperedCount > 0) {
-    console.log(
-      pc.red(
-        `Governance check failed: ${fileTamperedCount} generated schema file(s) were manually edited.`
+    if (!opts.json) {
+      console.log(
+        pc.red(
+          `Governance check failed: ${fileTamperedCount} generated schema file(s) were manually edited.`
+        )
       )
-    )
-    console.log(pc.dim('Generated files in .contentlayer3/generated/ must not be edited manually.'))
+      console.log(pc.dim('Generated files in .contentlayer3/generated/ must not be edited manually.'))
+    }
     process.exit(2)
   }
 
   const strictUnregistered = process.env['CL3_POSTMAN_STRICT_UNREGISTERED'] === '1'
   if (unregistered.length > 0 && strictUnregistered) {
-    console.log(
-      pc.yellow(`Warning: ${unregistered.length} unregistered source(s) found.`)
-    )
-    console.log(
-      pc.dim('Run: contentlayer3 postman adopt <name>  or  contentlayer3 postman push <name>')
-    )
+    if (!opts.json) {
+      console.log(
+        pc.yellow(`Warning: ${unregistered.length} unregistered source(s) found.`)
+      )
+      console.log(
+        pc.dim('Run: contentlayer3 postman adopt <name>  or  contentlayer3 postman push <name>')
+      )
+    }
     process.exit(3)
   }
 
-  console.log(pc.green('All governed sources are in sync. ✓'))
+  if (!opts.json) {
+    console.log(pc.green('All governed sources are in sync. ✓'))
+  }
 }
