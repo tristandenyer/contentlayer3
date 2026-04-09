@@ -110,7 +110,7 @@ export function transformConfig(source: string): TransformResult {
 
     if (hasComputedFields) {
       warnings.push({
-        message: `computedFields in '${typeName}' require manual migration to schema .transform()`,
+        message: `computedFields in '${typeName}': simplify each field from { type, resolve: (doc) => ... } to just (doc) => ... — see contentlayer3 docs`,
         requiresManualReview: true,
       })
     }

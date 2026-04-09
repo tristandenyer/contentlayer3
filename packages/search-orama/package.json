@@ -1,5 +1,5 @@
 {
-  "name": "@cl3/search-orama",
+  "name": "@contentlayer3/search-orama",
   "version": "1.0.0-rc",
   "type": "module",
   "main": "./dist/index.js",

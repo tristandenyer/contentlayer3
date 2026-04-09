@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "contentlayer3": "workspace:*",
-    "@cl3/source-remote": "workspace:*"
+    "@contentlayer3/source-remote": "workspace:*"
   }
 }

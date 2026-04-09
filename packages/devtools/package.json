@@ -1,8 +1,8 @@
 {
-  "name": "@cl3/devtools",
+  "name": "@contentlayer3/devtools",
   "version": "1.0.0-rc",
   "type": "module",
-  "description": "CL3 developer tools",
+  "description": "Contentlayer3 developer tools",
   "bin": {
     "cl3": "./dist/cli.js"
   },

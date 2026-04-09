@@ -1,5 +1,5 @@
 import { defineCollection, getCollectionBase } from 'contentlayer3'
-import { remote } from '@cl3/source-remote'
+import { remote } from '@contentlayer3/source-remote'
 import { z } from 'zod'
 
 const posts = defineCollection({
