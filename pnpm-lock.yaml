@@ -59,7 +59,7 @@ importers:
 
   apps/example-cloudflare:
     dependencies:
-      '@cl3/source-remote':
+      '@contentlayer3/source-remote':
         specifier: workspace:*
         version: link:../../packages/source-remote
       contentlayer3:
